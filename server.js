@@ -21,6 +21,7 @@ app.use(cookieParser())
 app.use(express.static('public'))
 
 app.use('/', require('./routes/root'))
+app.use('/employees', require('./routes/api/employees'))
 
 app.all('*', (req, res) => {
 	res.status(404)
