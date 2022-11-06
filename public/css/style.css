@@ -1,0 +1,35 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+html {
+    font-family: Roboto, sans-serif;
+    color: #fffefc;
+    background-color: #262627;
+}
+
+
+body {
+    height: 100vh;
+}
+
+img {
+    width: 240px;
+}
+
+.logo {
+    padding: 1rem 2rem;
+}
+
+.content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+h1 {
+    font-size: 80px;
+}
