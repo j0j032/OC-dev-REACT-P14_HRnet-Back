@@ -6,29 +6,14 @@ const userSchema = new Schema({
 		type: String,
 		required: true
 	},
-	firstname: {
-		type: String,
-		required: true
-	},
-	lastname: {
-		type: String,
-		required: true
-	},
-	picture: {
-		type: String,
-		required: true
-	},
-	title: {
-		type: String,
-		required: true
-	},
-	email: {
-		type: String,
-		required: true
-	},
+	firstname: String,
+	lastname: String,
+	picture: String,
+	title: String,
+	email: String,
 	company: {
-		type: String,
-		required: true
+		name: String,
+		logo: String
 	},
 	roles: {
 		User: {
@@ -45,4 +30,5 @@ const userSchema = new Schema({
 	refreshToken: String
 })
 
+// Mongo will create a collections of employeeS in lowercase
 module.exports = mongoose.model('User', userSchema)
