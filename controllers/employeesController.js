@@ -2,7 +2,7 @@ const Employee = require('../models/Employee')
 
 const getAllEmployees = async (req, res) => {
 	const page = req.query.p || 0
-	const employeesPerPage = 6
+	const employeesPerPage = req.query.limit || 12
 	const employees = await Employee
 		.find()
 		.sort({lastname: 1})
