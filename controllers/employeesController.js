@@ -1,9 +1,16 @@
 const Employee = require('../models/Employee')
 
 const getAllEmployees = async (req, res) => {
-	const employees = await Employee.find()
+	const page = req.query.p < 0 || null ? 0 : req.query.p || 0
+	const employeesPerPage = req.query.limit || 12
+	const employeesLength = await Employee.count()
+	const employees = await Employee
+		.find()
+		.sort({lastname: 1})
+		.skip(page * employeesPerPage)
+		.limit(employeesPerPage)
 	if (!employees) return res.status(204).json({'message': 'No employees found.'})
-	res.json(employees)
+	res.json({employees, employeesLength})
 }
 
 const createNewEmployee = async (req, res) => {
