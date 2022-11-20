@@ -5,19 +5,22 @@ const getAllEmployees = async (req, res) => {
 		return res.status(400).json({'message': 'Bad Request, the query param should be a number'})
 	
 	const page = req.query.page < 0 || null ? 0 : req.query.page || 0
-	const limit = req.query.limit === '0' ? 12 : req.query.limit || 12
+	const limit = req.query.limit || 12
 	const text = req.query.text || ''
-	//db.Employee.createIndex({'$**': 'text'})
 	
 	const employeesLength = await Employee.count()
-	
 	const employees = await Employee
 		.find({
 			$or: [
-				{title: {$regex: text, $options: 'i'}},
-				{department: {$regex: text, $options: 'i'}},
 				{firstname: {$regex: text, $options: 'i'}},
-				{lastname: {$regex: text, $options: 'i'}}
+				{lastname: {$regex: text, $options: 'i'}},
+				{hired: {$regex: text, $options: 'i'}},
+				{department: {$regex: text, $options: 'i'}},
+				{birthdate: {$regex: text, $options: 'i'}},
+				{'address.street': {$regex: text, $options: 'i'}},
+				{'address.city': {$regex: text, $options: 'i'}},
+				{'address.state': {$regex: text, $options: 'i'}},
+				{'address.zip': {$regex: text, $options: 'i'}}
 			]
 		})
 		.sort({lastname: 1})
