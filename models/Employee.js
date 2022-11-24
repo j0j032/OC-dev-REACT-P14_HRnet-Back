@@ -28,7 +28,7 @@ const employeeSchema = new Schema({
 	},
 	picture: {
 		type: String,
-		required: true
+		required: false
 	},
 	contact: {
 		mail: {
@@ -56,6 +56,20 @@ const employeeSchema = new Schema({
 		zip: {
 			type: String,
 			required: true
+		}
+	},
+	company: {
+		id: {
+			type: String,
+			required: true
+		},
+		name: {
+			type: String,
+			required: true
+		},
+		logo: {
+			type: String,
+			required: false
 		}
 	}
 })
