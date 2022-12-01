@@ -1,4 +1,8 @@
 const Employee = require('../models/Employee')
+const {uploadFile} = require('./s3PicturesController')
+const {json} = require('express')
+const {capitalize, formatPhoneNumber, formatToLocale} = require('../utils/formater')
+const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
 const getAllEmployees = async (req, res) => {
 	if (req.query.limit === 'null' || req.query.limit === 'undefined' || req.query.limit === undefined)
@@ -32,15 +36,52 @@ const getAllEmployees = async (req, res) => {
 }
 
 const createNewEmployee = async (req, res) => {
-	if (!req?.body?.firstname || !req?.body?.lastname || !req?.body?.birthdate || !req?.body?.title || !req?.body?.department || !req?.body?.hired || !req?.body?.address || !req?.body?.contact || !req?.body?.company) {
-		return res.status(400).json({'message': 'All fields are required.'})
+	if (!req?.body?.employee || !req?.body?.company || !req?.file) {
+		return res.status(400).json({'message': 'The entire form should be filled including image'})
 	}
+	const receivedEmployee = JSON.parse(req.body.employee)
+	const newEmployeeCompany = JSON.parse(req.body.company)
+	
+	const newEmployee = {
+		firstname: capitalize(receivedEmployee.firstname),
+		lastname: capitalize(receivedEmployee.lastname),
+		birthdate: formatToLocale(receivedEmployee.birthdate, 'en-US'),
+		title: capitalize(receivedEmployee.title),
+		department: receivedEmployee.department,
+		hired: formatToLocale(receivedEmployee.startDate, 'en-US'),
+		contact: {
+			mail: receivedEmployee.mail,
+			phone: receivedEmployee.phone
+		},
+		address: {
+			street: receivedEmployee.street,
+			city: capitalize(receivedEmployee.city),
+			state: getStateAbbreviation(receivedEmployee.state),
+			zip: receivedEmployee.zip
+		},
+		company: {
+			id: newEmployeeCompany.id,
+			name: newEmployeeCompany.name,
+			logo: newEmployeeCompany.logo
+		}
+	}
+	const fileName = newEmployee.firstname + newEmployee.lastname + newEmployee.birthdate.split('/').join('')
+	console.log('filename:', fileName)
 	
 	try {
+		await uploadFile(req.file.buffer, fileName, req.file.mimetype)
+		
 		const result = await Employee.create({
-			firstname: req.body.firstname, lastname: req.body.lastname, birthdate: req.body.birthdate, picture: req.body.picture,
-			title: req.body.title, department: req.body.department, hired: req.body.hired,
-			contact: req.body.contact, address: req.body.address, company: req.body.company
+			picture: fileName,
+			firstname: newEmployee.firstname,
+			lastname: newEmployee.lastname,
+			birthdate: newEmployee.birthdate,
+			title: newEmployee.title,
+			department: newEmployee.department,
+			hired: newEmployee.hired,
+			contact: newEmployee.contact,
+			address: newEmployee.address,
+			company: newEmployee.company
 		})
 		res.status(201).json(result)
 		
