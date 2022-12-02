@@ -1,6 +1,6 @@
 const Employee = require('../models/Employee')
-const {uploadFile} = require('./s3PicturesController')
 const {json} = require('express')
+const {uploadFile, getObjectSignedUrl} = require('./s3PicturesController')
 const {capitalize, formatPhoneNumber, formatToLocale} = require('../utils/formater')
 const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
@@ -32,6 +32,10 @@ const getAllEmployees = async (req, res) => {
 		.limit(limit)
 	
 	if (!employees) return res.status(204).json({'message': 'No employees found.'})
+	for (let employee of employees) {
+		employee.imageUrl = await getObjectSignedUrl(employee.picture)
+	}
+	console.log(employees)
 	res.json({employees, employeesLength})
 }
 
@@ -70,7 +74,6 @@ const createNewEmployee = async (req, res) => {
 	
 	try {
 		await uploadFile(req.file.buffer, fileName, req.file.mimetype)
-		
 		const result = await Employee.create({
 			picture: fileName,
 			firstname: newEmployee.firstname,
@@ -115,6 +118,7 @@ const getEmployee = async (req, res) => {
 	const employee = await Employee.findOne({_id: req.params.id}).exec()
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.params.id}.`})
+	employee.imageUrl = await getObjectSignedUrl(employee.picture)
 	res.json(employee)
 }
 
