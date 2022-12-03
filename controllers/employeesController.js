@@ -1,6 +1,6 @@
 const Employee = require('../models/Employee')
 const {json} = require('express')
-const {uploadFile, getObjectSignedUrl} = require('./s3PicturesController')
+const {uploadFile, getObjectSignedUrl, deleteFile} = require('./s3PicturesController')
 const {capitalize, formatPhoneNumber, formatToLocale} = require('../utils/formater')
 const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
@@ -35,12 +35,11 @@ const getAllEmployees = async (req, res) => {
 	for (let employee of employees) {
 		employee.imageUrl = await getObjectSignedUrl(employee.picture)
 	}
-	console.log(employees)
 	res.json({employees, employeesLength})
 }
 
 const createNewEmployee = async (req, res) => {
-	if (!req?.body?.employee || !req?.body?.company || !req?.file) {
+	if (!req?.body?.employee || !req?.body?.company) {
 		return res.status(400).json({'message': 'The entire form should be filled including image'})
 	}
 	const receivedEmployee = JSON.parse(req.body.employee)
@@ -55,7 +54,7 @@ const createNewEmployee = async (req, res) => {
 		hired: formatToLocale(receivedEmployee.startDate, 'en-US'),
 		contact: {
 			mail: receivedEmployee.mail,
-			phone: receivedEmployee.phone
+			phone: formatPhoneNumber(receivedEmployee.phone)
 		},
 		address: {
 			street: receivedEmployee.street,
@@ -73,7 +72,9 @@ const createNewEmployee = async (req, res) => {
 	console.log('filename:', fileName)
 	
 	try {
-		await uploadFile(req.file.buffer, fileName, req.file.mimetype)
+		if (req.file) {
+			await uploadFile(req.file.buffer, fileName, req.file.mimetype)
+		}
 		const result = await Employee.create({
 			picture: fileName,
 			firstname: newEmployee.firstname,
@@ -109,6 +110,8 @@ const deleteEmployee = async (req, res) => {
 	const employee = await Employee.findOne({_id: req.body.id}).exec()
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.body.id}.`})
+	
+	await deleteFile(employee.picture)
 	const result = await employee.deleteOne({_id: req.body.id})
 	res.json(result)
 }
