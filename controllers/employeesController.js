@@ -1,4 +1,8 @@
 const Employee = require('../models/Employee')
+const {json} = require('express')
+const {uploadFile, getObjectSignedUrl, deleteFile} = require('./s3PicturesController')
+const {capitalize, formatPhoneNumber, formatToLocale} = require('../utils/formater')
+const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
 const getAllEmployees = async (req, res) => {
 	if (req.query.limit === 'null' || req.query.limit === 'undefined' || req.query.limit === undefined)
@@ -28,19 +32,60 @@ const getAllEmployees = async (req, res) => {
 		.limit(limit)
 	
 	if (!employees) return res.status(204).json({'message': 'No employees found.'})
+	for (let employee of employees) {
+		employee.imageUrl = await getObjectSignedUrl(employee.picture)
+	}
 	res.json({employees, employeesLength})
 }
 
 const createNewEmployee = async (req, res) => {
-	if (!req?.body?.firstname || !req?.body?.lastname || !req?.body?.birthdate || !req?.body?.title || !req?.body?.department || !req?.body?.hired || !req?.body?.address || !req?.body?.contact || !req?.body?.company) {
-		return res.status(400).json({'message': 'All fields are required.'})
+	if (!req?.body?.employee || !req?.body?.company) {
+		return res.status(400).json({'message': 'The entire form should be filled including image'})
 	}
+	const receivedEmployee = JSON.parse(req.body.employee)
+	const newEmployeeCompany = JSON.parse(req.body.company)
+	
+	const newEmployee = {
+		firstname: capitalize(receivedEmployee.firstname),
+		lastname: capitalize(receivedEmployee.lastname),
+		birthdate: receivedEmployee.birthdate,
+		title: capitalize(receivedEmployee.title),
+		department: receivedEmployee.department,
+		hired: receivedEmployee.startDate,
+		contact: {
+			mail: receivedEmployee.mail,
+			phone: formatPhoneNumber(receivedEmployee.phone)
+		},
+		address: {
+			street: receivedEmployee.street,
+			city: capitalize(receivedEmployee.city),
+			state: getStateAbbreviation(receivedEmployee.state),
+			zip: receivedEmployee.zip
+		},
+		company: {
+			id: newEmployeeCompany.id,
+			name: newEmployeeCompany.name,
+			logo: newEmployeeCompany.logo
+		}
+	}
+	const fileName = newEmployee.firstname + newEmployee.lastname + newEmployee.birthdate.split('/').join('')
+	console.log('filename:', fileName)
 	
 	try {
+		if (req.file) {
+			await uploadFile(req.file.buffer, fileName, req.file.mimetype)
+		}
 		const result = await Employee.create({
-			firstname: req.body.firstname, lastname: req.body.lastname, birthdate: req.body.birthdate, picture: req.body.picture,
-			title: req.body.title, department: req.body.department, hired: req.body.hired,
-			contact: req.body.contact, address: req.body.address, company: req.body.company
+			picture: fileName,
+			firstname: newEmployee.firstname,
+			lastname: newEmployee.lastname,
+			birthdate: newEmployee.birthdate,
+			title: newEmployee.title,
+			department: newEmployee.department,
+			hired: newEmployee.hired,
+			contact: newEmployee.contact,
+			address: newEmployee.address,
+			company: newEmployee.company
 		})
 		res.status(201).json(result)
 		
@@ -50,12 +95,32 @@ const createNewEmployee = async (req, res) => {
 }
 
 const updateEmployee = async (req, res) => {
-	if (!req.body?.id) return res.status(400).json({'message': 'ID parameter is required.'})
-	const employee = await Employee.findOne({_id: req.body.id}).exec()
+	if (!req?.body?.employee) {
+		return res.status(400).json({'message': 'Bad request'})
+	}
+	const receivedEmployee = JSON.parse(req.body.employee)
 	
-	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.body.id}.`})
-	if (req.body?.firstname) employee.firstname = req.body.firstname
-	if (req.body?.lastname) employee.lastname = req.body.lastname
+	if (!receivedEmployee._id) return res.status(400).json({'message': 'ID parameter is required.'})
+	const employee = await Employee.findOne({_id: receivedEmployee._id}).exec()
+	if (!employee) return res.status(204).json({'message': `No employee matches ID ${receivedEmployee._id}.`})
+	
+	if (req.file && receivedEmployee) {
+		await uploadFile(req.file.buffer, receivedEmployee.picture, req.file.mimetype)
+	}
+	if (receivedEmployee && !req.file) {
+		employee.firstname = capitalize(receivedEmployee.firstname)
+		employee.lastname = capitalize(receivedEmployee.lastname)
+		employee.birthdate = receivedEmployee.birthdate
+		employee.title = capitalize(receivedEmployee.title)
+		employee.department = receivedEmployee.department
+		employee.hired = receivedEmployee.startDate
+		employee.contact.mail = receivedEmployee.mail
+		employee.contact.phone = formatPhoneNumber(receivedEmployee.phone)
+		employee.address.street = receivedEmployee.street
+		employee.address.city = capitalize(receivedEmployee.city)
+		employee.address.state = getStateAbbreviation(receivedEmployee.state)
+		employee.address.zip = receivedEmployee.zip
+	}
 	const result = await employee.save()
 	res.json(result)
 }
@@ -65,6 +130,8 @@ const deleteEmployee = async (req, res) => {
 	const employee = await Employee.findOne({_id: req.body.id}).exec()
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.body.id}.`})
+	
+	await deleteFile(employee.picture)
 	const result = await employee.deleteOne({_id: req.body.id})
 	res.json(result)
 }
@@ -74,6 +141,7 @@ const getEmployee = async (req, res) => {
 	const employee = await Employee.findOne({_id: req.params.id}).exec()
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.params.id}.`})
+	employee.imageUrl = await getObjectSignedUrl(employee.picture)
 	res.json(employee)
 }
 
