@@ -12,7 +12,7 @@ router.route('/')
 	// route = http://localhost:3500/employees
 	.get(employeesController.getAllEmployees)
 	.post(upload.single('image'), employeesController.createNewEmployee)
-	.put(employeesController.updateEmployee)
+	.put(upload.single('image'), employeesController.updateEmployee)
 	.delete(employeesController.deleteEmployee)
 
 router.route('/:id')

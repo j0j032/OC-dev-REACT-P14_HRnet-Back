@@ -48,10 +48,10 @@ const createNewEmployee = async (req, res) => {
 	const newEmployee = {
 		firstname: capitalize(receivedEmployee.firstname),
 		lastname: capitalize(receivedEmployee.lastname),
-		birthdate: formatToLocale(receivedEmployee.birthdate, 'en-US'),
+		birthdate: receivedEmployee.birthdate,
 		title: capitalize(receivedEmployee.title),
 		department: receivedEmployee.department,
-		hired: formatToLocale(receivedEmployee.startDate, 'en-US'),
+		hired: receivedEmployee.startDate,
 		contact: {
 			mail: receivedEmployee.mail,
 			phone: formatPhoneNumber(receivedEmployee.phone)
@@ -95,12 +95,32 @@ const createNewEmployee = async (req, res) => {
 }
 
 const updateEmployee = async (req, res) => {
-	if (!req.body?.id) return res.status(400).json({'message': 'ID parameter is required.'})
-	const employee = await Employee.findOne({_id: req.body.id}).exec()
+	if (!req?.body?.employee) {
+		return res.status(400).json({'message': 'Bad request'})
+	}
+	const receivedEmployee = JSON.parse(req.body.employee)
 	
-	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.body.id}.`})
-	if (req.body?.firstname) employee.firstname = req.body.firstname
-	if (req.body?.lastname) employee.lastname = req.body.lastname
+	if (!receivedEmployee._id) return res.status(400).json({'message': 'ID parameter is required.'})
+	const employee = await Employee.findOne({_id: receivedEmployee._id}).exec()
+	if (!employee) return res.status(204).json({'message': `No employee matches ID ${receivedEmployee._id}.`})
+	
+	if (req.file && receivedEmployee) {
+		await uploadFile(req.file.buffer, receivedEmployee.picture, req.file.mimetype)
+	}
+	if (receivedEmployee && !req.file) {
+		employee.firstname = capitalize(receivedEmployee.firstname)
+		employee.lastname = capitalize(receivedEmployee.lastname)
+		employee.birthdate = receivedEmployee.birthdate
+		employee.title = capitalize(receivedEmployee.title)
+		employee.department = receivedEmployee.department
+		employee.hired = receivedEmployee.startDate
+		employee.contact.mail = receivedEmployee.mail
+		employee.contact.phone = formatPhoneNumber(receivedEmployee.phone)
+		employee.address.street = receivedEmployee.street
+		employee.address.city = capitalize(receivedEmployee.city)
+		employee.address.state = getStateAbbreviation(receivedEmployee.state)
+		employee.address.zip = receivedEmployee.zip
+	}
 	const result = await employee.save()
 	res.json(result)
 }
