@@ -144,6 +144,7 @@ const getEmployee = async (req, res) => {
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.params.id}.`})
 	employee.imageUrl = await getObjectSignedUrl(employee.picture)
+	
 	res.json(employee)
 }
 
