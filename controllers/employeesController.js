@@ -68,7 +68,7 @@ const createNewEmployee = async (req, res) => {
 			logo: newEmployeeCompany.logo
 		}
 	}
-	const fileName = newEmployee.firstname + newEmployee.lastname + newEmployee.birthdate.split('/').join('')
+	const fileName = req.file ? newEmployee.firstname + newEmployee.lastname + newEmployee.birthdate.split('/').join('') : 'none'
 	console.log('filename:', fileName)
 	
 	try {
@@ -105,7 +105,9 @@ const updateEmployee = async (req, res) => {
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${receivedEmployee._id}.`})
 	
 	if (req.file && receivedEmployee) {
-		await uploadFile(req.file.buffer, receivedEmployee.picture, req.file.mimetype)
+		const fileName = receivedEmployee.firstname + receivedEmployee.lastname + receivedEmployee.birthdate.split('/').join('')
+		employee.picture = receivedEmployee.picture === 'none' ? fileName : receivedEmployee.picture
+		await uploadFile(req.file.buffer, employee.picture, req.file.mimetype)
 	}
 	if (receivedEmployee && !req.file) {
 		employee.firstname = capitalize(receivedEmployee.firstname)
@@ -142,6 +144,7 @@ const getEmployee = async (req, res) => {
 	
 	if (!employee) return res.status(204).json({'message': `No employee matches ID ${req.params.id}.`})
 	employee.imageUrl = await getObjectSignedUrl(employee.picture)
+	
 	res.json(employee)
 }
 
