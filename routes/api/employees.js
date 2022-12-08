@@ -1,12 +1,18 @@
 const express = require('express')
 const router = express.Router()
+const multer = require('multer')
+const storage = multer.memoryStorage()
+const upload = multer({storage: storage})
 const employeesController = require('../../controllers/employeesController')
+
+
+//upload.multiple('image', 'data')
 
 router.route('/')
 	// route = http://localhost:3500/employees
 	.get(employeesController.getAllEmployees)
-	.post(employeesController.createNewEmployee)
-	.put(employeesController.updateEmployee)
+	.post(upload.single('image'), employeesController.createNewEmployee)
+	.put(upload.single('image'), employeesController.updateEmployee)
 	.delete(employeesController.deleteEmployee)
 
 router.route('/:id')

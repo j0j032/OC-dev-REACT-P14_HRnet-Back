@@ -28,7 +28,11 @@ const employeeSchema = new Schema({
 	},
 	picture: {
 		type: String,
-		required: true
+		required: false
+	},
+	imageUrl: {
+		type: String,
+		required: false
 	},
 	contact: {
 		mail: {

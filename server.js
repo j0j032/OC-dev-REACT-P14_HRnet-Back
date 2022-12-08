@@ -11,6 +11,7 @@ const {logger, logEvents} = require('./middlewares/logger')
 const errorHandler = require('./middlewares/errorHandler')
 const cookieParser = require('cookie-parser')
 
+
 connectDB()
 app.use(logger)
 app.use(cors(corsOptions))
@@ -22,6 +23,8 @@ app.use(express.static('public'))
 
 app.use('/', require('./routes/root'))
 app.use('/auth', require('./routes/auth'))
+
+
 app.use('/employees', require('./routes/api/employees'))
 
 app.all('*', (req, res) => {
