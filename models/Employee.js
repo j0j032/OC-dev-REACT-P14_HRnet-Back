@@ -57,6 +57,10 @@ const employeeSchema = new Schema({
 			type: String,
 			required: true
 		},
+		stateAbb: {
+			type: String,
+			required: true
+		},
 		zip: {
 			type: String,
 			required: true

@@ -1,7 +1,7 @@
 const Employee = require('../models/Employee')
 const {json} = require('express')
 const {uploadFile, getObjectSignedUrl, deleteFile} = require('./s3PicturesController')
-const {capitalize, formatPhoneNumber, formatToLocale} = require('../utils/formater')
+const {capitalize, formatPhoneNumber, formatToLocale, titleCase} = require('../utils/formater')
 const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
 const getAllEmployees = async (req, res) => {
@@ -16,6 +16,7 @@ const getAllEmployees = async (req, res) => {
 	const employees = await Employee
 		.find({
 			$or: [
+				//<editor-fold desc=" _MATCH_ ">
 				{firstname: {$regex: text, $options: 'i'}},
 				{lastname: {$regex: text, $options: 'i'}},
 				{hired: {$regex: text, $options: 'i'}},
@@ -25,6 +26,7 @@ const getAllEmployees = async (req, res) => {
 				{'address.city': {$regex: text, $options: 'i'}},
 				{'address.state': {$regex: text, $options: 'i'}},
 				{'address.zip': {$regex: text, $options: 'i'}}
+				//</editor-fold>
 			]
 		})
 		.sort({lastname: 1})
@@ -46,10 +48,11 @@ const createNewEmployee = async (req, res) => {
 	const newEmployeeCompany = JSON.parse(req.body.company)
 	
 	const newEmployee = {
-		firstname: capitalize(receivedEmployee.firstname),
-		lastname: capitalize(receivedEmployee.lastname),
+		//<editor-fold desc="DEFINE AND FORMAT">
+		firstname: titleCase(receivedEmployee.firstname),
+		lastname: titleCase(receivedEmployee.lastname),
 		birthdate: receivedEmployee.birthdate,
-		title: capitalize(receivedEmployee.title),
+		title: titleCase(receivedEmployee.title),
 		department: receivedEmployee.department,
 		hired: receivedEmployee.startDate,
 		contact: {
@@ -58,8 +61,9 @@ const createNewEmployee = async (req, res) => {
 		},
 		address: {
 			street: receivedEmployee.street,
-			city: capitalize(receivedEmployee.city),
-			state: getStateAbbreviation(receivedEmployee.state),
+			city: titleCase(receivedEmployee.city),
+			state: receivedEmployee.state,
+			stateAbb: getStateAbbreviation(receivedEmployee.state),
 			zip: receivedEmployee.zip
 		},
 		company: {
@@ -67,6 +71,7 @@ const createNewEmployee = async (req, res) => {
 			name: newEmployeeCompany.name,
 			logo: newEmployeeCompany.logo
 		}
+		//</editor-fold>
 	}
 	const fileName = req.file ? newEmployee.firstname + newEmployee.lastname + newEmployee.birthdate.split('/').join('') : 'none'
 	console.log('filename:', fileName)
@@ -76,6 +81,7 @@ const createNewEmployee = async (req, res) => {
 			await uploadFile(req.file.buffer, fileName, req.file.mimetype)
 		}
 		const result = await Employee.create({
+			//<editor-fold desc="SET FIELDS">
 			picture: fileName,
 			firstname: newEmployee.firstname,
 			lastname: newEmployee.lastname,
@@ -86,6 +92,7 @@ const createNewEmployee = async (req, res) => {
 			contact: newEmployee.contact,
 			address: newEmployee.address,
 			company: newEmployee.company
+			//</editor-fold>
 		})
 		res.status(201).json(result)
 		
@@ -110,18 +117,21 @@ const updateEmployee = async (req, res) => {
 		await uploadFile(req.file.buffer, employee.picture, req.file.mimetype)
 	}
 	if (receivedEmployee && !req.file) {
-		employee.firstname = capitalize(receivedEmployee.firstname)
-		employee.lastname = capitalize(receivedEmployee.lastname)
+		//<editor-fold desc="UPDATE FIELDS">
+		employee.firstname = titleCase(receivedEmployee.firstname)
+		employee.lastname = titleCase(receivedEmployee.lastname)
 		employee.birthdate = receivedEmployee.birthdate
-		employee.title = capitalize(receivedEmployee.title)
+		employee.title = titleCase(receivedEmployee.title)
 		employee.department = receivedEmployee.department
 		employee.hired = receivedEmployee.startDate
 		employee.contact.mail = receivedEmployee.mail
 		employee.contact.phone = formatPhoneNumber(receivedEmployee.phone)
 		employee.address.street = receivedEmployee.street
-		employee.address.city = capitalize(receivedEmployee.city)
-		employee.address.state = getStateAbbreviation(receivedEmployee.state)
+		employee.address.city = titleCase(receivedEmployee.city)
+		employee.address.state = receivedEmployee.state
+		employee.address.stateAbb = getStateAbbreviation(receivedEmployee.state)
 		employee.address.zip = receivedEmployee.zip
+		//</editor-fold>
 	}
 	const result = await employee.save()
 	res.json(result)
