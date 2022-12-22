@@ -4,6 +4,17 @@ const formatToLocale = (date, zone) => {
 	return ts.toLocaleDateString(zone)
 }
 
+function formatDateToTimestamp(date) {
+	let d = new Date(date),
+		month = '' + (d.getMonth() + 1),
+		day = '' + d.getDate(),
+		year = d.getFullYear()
+	if (month.length < 2) month = '0' + month
+	if (day.length < 2) day = '0' + day
+	return [year, month, day].join('')
+}
+
+
 function formatPhoneNumber(phoneNumberString) {
 	let cleaned = ('' + phoneNumberString).replace(/\D/g, '')
 	let match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
@@ -24,4 +35,4 @@ function titleCase(str) {
 	return splitStr.join(' ')
 }
 
-module.exports = {formatToLocale, capitalize, titleCase, formatPhoneNumber}
+module.exports = {formatDateToTimestamp, formatToLocale, capitalize, titleCase, formatPhoneNumber}

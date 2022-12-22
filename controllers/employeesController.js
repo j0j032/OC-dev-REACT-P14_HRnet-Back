@@ -1,6 +1,6 @@
 const Employee = require('../models/Employee')
 const {uploadFile, getObjectSignedUrl, deleteFile} = require('./s3PicturesController')
-const {formatPhoneNumber, titleCase} = require('../utils/formater')
+const {formatPhoneNumber, titleCase, formatDateToTimestamp} = require('../utils/formater')
 const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
 const getAllEmployees = async (req, res) => {
@@ -51,10 +51,10 @@ const createNewEmployee = async (req, res) => {
 		//<editor-fold desc="DEFINE AND FORMAT">
 		firstname: titleCase(receivedEmployee.firstname),
 		lastname: titleCase(receivedEmployee.lastname),
-		birthdate: receivedEmployee.birthdate,
+		birthdate: formatDateToTimestamp(receivedEmployee.birthdate),
 		title: titleCase(receivedEmployee.title),
 		department: receivedEmployee.department,
-		hired: receivedEmployee.startDate,
+		hired: formatDateToTimestamp(receivedEmployee.startDate),
 		contact: {
 			mail: receivedEmployee.mail,
 			phone: formatPhoneNumber(receivedEmployee.phone)
@@ -120,10 +120,10 @@ const updateEmployee = async (req, res) => {
 		//<editor-fold desc="UPDATE FIELDS">
 		employee.firstname = titleCase(receivedEmployee.firstname)
 		employee.lastname = titleCase(receivedEmployee.lastname)
-		employee.birthdate = receivedEmployee.birthdate
+		employee.birthdate = formatDateToTimestamp(receivedEmployee.birthdate)
 		employee.title = titleCase(receivedEmployee.title)
 		employee.department = receivedEmployee.department
-		employee.hired = receivedEmployee.startDate
+		employee.hired = formatDateToTimestamp(receivedEmployee.startDate)
 		employee.contact.mail = receivedEmployee.mail
 		employee.contact.phone = formatPhoneNumber(receivedEmployee.phone)
 		employee.address.street = receivedEmployee.street
