@@ -1,7 +1,6 @@
 const Employee = require('../models/Employee')
-const {json} = require('express')
 const {uploadFile, getObjectSignedUrl, deleteFile} = require('./s3PicturesController')
-const {capitalize, formatPhoneNumber, formatToLocale, titleCase} = require('../utils/formater')
+const {formatPhoneNumber, titleCase} = require('../utils/formater')
 const {getStateAbbreviation} = require('../utils/getStateAbbreviation')
 
 const getAllEmployees = async (req, res) => {
@@ -11,6 +10,7 @@ const getAllEmployees = async (req, res) => {
 	const page = req.query.page < 0 || null ? 0 : req.query.page || 0
 	const limit = req.query.limit || 12
 	const text = req.query.text || ''
+	const sortMethod = req.query.sortMethod
 	
 	const employeesLength = await Employee.count()
 	const employees = await Employee
@@ -29,7 +29,7 @@ const getAllEmployees = async (req, res) => {
 				//</editor-fold>
 			]
 		})
-		.sort({lastname: 1})
+		.sort(sortMethod)
 		.skip(page * limit)
 		.limit(limit)
 	
