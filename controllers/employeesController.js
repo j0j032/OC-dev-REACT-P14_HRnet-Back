@@ -11,10 +11,10 @@ const getAllEmployees = async (req, res) => {
 	const limit = req.query.limit || 12
 	const text = req.query.text || ''
 	const sortMethod = req.query.sortMethod
+	const companyId = req.query.companyId
 	
-	const employeesLength = await Employee.count()
 	const employees = await Employee
-		.find({
+		.find({'company.id': {$regex: companyId, $options: 'i'}}, null, {
 			$or: [
 				//<editor-fold desc=" _MATCH_ ">
 				{firstname: {$regex: text, $options: 'i'}},
@@ -33,11 +33,17 @@ const getAllEmployees = async (req, res) => {
 		.skip(page * limit)
 		.limit(limit)
 	
+	const totalOfEmployees = await Employee.find({'company.id': {$regex: companyId, $options: 'i'}}).count()
+	
+	const employeesFound = await employees.length
+	
+	console.log(employeesFound)
+	
 	if (!employees) return res.status(204).json({'message': 'No employees found.'})
 	for (let employee of employees) {
 		employee.imageUrl = await getObjectSignedUrl(employee.picture)
 	}
-	res.json({employees, employeesLength})
+	res.json({employees, totalOfEmployees, employeesFound})
 }
 
 const createNewEmployee = async (req, res) => {
