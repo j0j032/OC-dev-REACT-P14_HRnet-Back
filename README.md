@@ -1,2 +1,5 @@
 # OC-dev-REACT-P14_HRnet-Back
-Hrnet new version back end
+
+### Start server:
+
+` npm run dev`

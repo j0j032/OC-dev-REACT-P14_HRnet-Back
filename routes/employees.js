@@ -3,7 +3,7 @@ const router = express.Router()
 const multer = require('multer')
 const storage = multer.memoryStorage()
 const upload = multer({storage: storage})
-const employeesController = require('../../controllers/employeesController')
+const employeesController = require('../controllers/employeesController')
 
 
 //upload.multiple('image', 'data')

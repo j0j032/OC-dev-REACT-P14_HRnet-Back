@@ -25,7 +25,7 @@ app.use('/', require('./routes/root'))
 app.use('/auth', require('./routes/auth'))
 
 
-app.use('/employees', require('./routes/api/employees'))
+app.use('/employees', require('./routes/employees'))
 
 app.all('*', (req, res) => {
 	res.status(404)
