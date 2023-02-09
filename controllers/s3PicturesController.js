@@ -1,4 +1,10 @@
-const {DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client} = require('@aws-sdk/client-s3')
+const sharp = require('sharp')
+const {
+	DeleteObjectCommand,
+	GetObjectCommand,
+	PutObjectCommand,
+	S3Client
+} = require('@aws-sdk/client-s3')
 const {getSignedUrl} = require('@aws-sdk/s3-request-presigner')
 const dotenv = require('dotenv')
 
@@ -17,12 +23,16 @@ const s3Client = new S3Client({
 	region
 })
 
-function uploadFile(fileBuffer, fileName, mimetype) {
+async function uploadFile(fileBuffer, fileName, mimetype) {
+	const webpBuffer = await sharp(fileBuffer)
+		.webp({quality: 60}).resize(540, 540)
+		.toBuffer()
+	
 	const uploadParams = {
 		Bucket: bucketName,
-		Body: fileBuffer,
+		Body: webpBuffer,
 		Key: fileName,
-		ContentType: mimetype
+		ContentType: 'image/webp'
 	}
 	
 	return s3Client.send(new PutObjectCommand(uploadParams))
