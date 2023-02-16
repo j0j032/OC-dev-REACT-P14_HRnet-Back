@@ -33,11 +33,14 @@ const getAllEmployees = async (req, res) => {
 		.skip(page * limit)
 		.limit(limit)
 	
-	const totalOfEmployees = await Employee.find({'company.id': {$regex: companyId, $options: 'i'}}).count()
+	const totalOfEmployees = await Employee.find({
+		'company.id': {
+			$regex: companyId,
+			$options: 'i'
+		}
+	}).count()
 	
 	const employeesFound = await employees.length
-	
-	console.log(employeesFound)
 	
 	if (!employees) return res.status(204).json({'message': 'No employees found.'})
 	for (let employee of employees) {
