@@ -21,11 +21,11 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(express.static('public'))
 
-app.use('/', require('./routes/root'))
-app.use('/auth', require('./routes/auth'))
+app.use('/api', require('./routes/root'))
+app.use('/api/auth', require('./routes/auth'))
 
 
-app.use('/employees', require('./routes/employees'))
+app.use('/api/employees', require('./routes/employees'))
 
 app.all('*', (req, res) => {
 	res.status(404)
